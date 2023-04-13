@@ -10,9 +10,9 @@ if($_SERVER['REQUEST_METHOD'] == "POST"){
     }
     else{
         $sql = "SELECT id FROM users WHERE username =?";
-        $stmt = mysqli_prepare($link, $sql);
+        $stmt = mysqli_prepare($conn, $sql);
         if($stmt){
-            mysqli_stmt_bind_param(stmt, "s",. $param_username);
+            mysqli_stmt_bind_param($stmt, "s", $param_username);
             //set the value of the param username
             $param_username = trim($_POST['username']);
             //try to execute the statement
@@ -22,20 +22,19 @@ if($_SERVER['REQUEST_METHOD'] == "POST"){
                 {
                     $username_err = "This username is already taken";
                 }
-                else{
-                    $username = trim($_POST['username'])
+                else
+                {
+                    $username = trim($_POST['username']);
                 }
-            }
+              }
             else{
-                echo "Something went wrong";
+              echo "Something went wrong";
             }
-
+         }
         }
-    }
     mysqli_stmt_close($stmt);
-}
 //check for the password
-if(empty(trim($_POST['password ']))){
+if(empty(trim($_POST['password']))){
     $password_err = "Password cannot be blank";
 }
 elseif(strlen(trim($_POST['password']))<5){
@@ -44,8 +43,33 @@ elseif(strlen(trim($_POST['password']))<5){
 else{
     $password = trim($_POST['password']);
 }
-//check for the confirm password
-
+//check for the confirm password field
+if(trim($_POST['password']) != trim($_POST['confirm_password'])){
+  $password_err = "Password should match";
+}
+// if there were no errors, go ahead and insert into the database
+if(empty($username_err) && empty($password_err) && empty($confirm_password_err)){
+  $sql = "INSERT INTO users(username, password) VALUES (?,?)";
+  $stmt = mysqli_prepare($conn,$sql);
+  if ($stmt)
+  {
+    mysqli_stmt_bind_param($stmt, "ss",$param_username,$param_password);
+    //SET THESE PARAMETERS
+    $param_username = $username;
+    $param_password = password_hash($password, PASSWORD_DEFAULT);
+    // try to EXECUTE THE QUERY
+    if(mysqli_stmt_execute($stmt))
+    {
+      header("location: login.php");
+    }
+    else{
+      echo "Something went wrong.... cannot redirect";
+    }
+  }
+  mysqli_stmt_close($stmt);
+}
+mysqli_close($conn);
+}
 ?>
 <!-- html code -->
 <!doctype html>
@@ -74,18 +98,18 @@ else{
 </nav>
 <h1>Please Register Here</h1>
 <div class="container">
-<form class="row g-3">
+<form action = '' method = "post" class="row g-3">
   <div class="col-md-6">
-    <label for="inputEmail4" class="form-label">Email</label>
-    <input type="email" class="form-control" id="inputEmail4">
+    <label for="inputEmail4" class="form-label">Username</label>
+    <input type="text" class="form-control" name= "username" id="inputEmail4">
   </div>
   <div class="col-md-6">
     <label for="inputPassword4" class="form-label">Password</label>
-    <input type="password" class="form-control" id="inputPassword4">
+    <input type="password" class="form-control"  name= "password" id="inputPassword4">
   </div>
-  <div class="col-12">
-    <label for="inputAddress" class="form-label">Address</label>
-    <input type="text" class="form-control" id="inputAddress" placeholder="1234 Main St">
+  <div class="col-md-6">
+    <label for="inputPassword4" class="form-label">Confirm Password</label>
+    <input type="password" class="form-control"  name= "confirm_password" id="inputPassword4">
   </div>
   <div class="col-12">
     <label for="inputAddress2" class="form-label">Address 2</label>
